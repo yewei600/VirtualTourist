@@ -12,66 +12,97 @@ import CoreData
 
 class MapViewController: UIViewController {
     
+    // MARK: properties
     @IBOutlet weak var mapView: MKMapView!
-    var mapViewInEditState: Bool = false
+    var editLabel: UILabel!
     var bottomConstraint: NSObject!
-    
-    // var pins = [Pin]()
-    var editMode = false
-    // var managedObjectContext
+    var coreDataStack: CoreDataStack!
     
     // MARK: lifecycle methods
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(MapViewController.longPressAction(gestureRecognizer:)))
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(MapViewController.longPressAddPin(gestureRecognizer:)))
         mapView.addGestureRecognizer(longPress)
+        mapView.delegate = self
         
+        //get the stack
+        let delegate = UIApplication.shared.delegate as! AppDelegate
+        coreDataStack = delegate.stack
+        
+        //the edit UILabel setup
+        navigationItem.rightBarButtonItem = editButtonItem
+        editLabel = UILabel(frame: editLabelFrameForSize(view.frame.size))
+        editLabel.backgroundColor = UIColor.red
+        editLabel.textColor = UIColor.white
+        editLabel.textAlignment = NSTextAlignment.center
+        editLabel.text = "Tap Pins to Delete"
+        self.view.addSubview(editLabel)
+        
+        //load annotations
+        loadAnnotations()
     }
     
-    // MARK: Actions
-    func longPressAction(gestureRecognizer: UIGestureRecognizer) {
+    // MARK: Helper Functions
+    func longPressAddPin(gestureRecognizer: UIGestureRecognizer) {
         if gestureRecognizer.state == .began {
             print("long press detected 0")
             let touchPoint = gestureRecognizer.location(in: self.mapView)
             let newCoord: CLLocationCoordinate2D = mapView.convert(touchPoint, toCoordinateFrom: self.mapView)
             
+            //add pin to core data
+            let newPin = Pin(coordinate: newCoord, context: coreDataStack.context)
+            //add pin annotation to map
             let newAnnotation = MKPointAnnotation()
             newAnnotation.coordinate = newCoord
             mapView.addAnnotation(newAnnotation)
         }
+        coreDataStack.save()
     }
     
-    
-    
-    
-    @IBAction func goToPhotoAlumbVC(_ sender: Any) {
-        print("goToPhotoAlbumVC called")
-        let controller = storyboard!.instantiateViewController(withIdentifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
-        navigationController!.pushViewController(controller, animated: true)
-    }
-    
-    func animateMapViewConstraintChange() {
-        if(!mapViewInEditState) {
-            mapViewInEditState = true
-            navigationItem.rightBarButtonItem?.title = "Done"
-            //
-            UIView.animate(withDuration: 100, animations: {
-                self.view.layoutIfNeeded()
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        print("setEditing called")
+        super.setEditing(editing, animated: animated)
+        
+        let yOffset: CGFloat = 70 * (editing ? -1 : 1)
+        
+        if (animated) {
+            UIView.animate(withDuration: 0.15, animations: {
+                self.mapView.frame = self.mapView.frame.offsetBy(dx: 0, dy: yOffset)
+                self.editLabel.frame = self.editLabel.frame.offsetBy(dx: 0, dy: yOffset)
             })
         } else {
-            mapViewInEditState = false
-            navigationItem.rightBarButtonItem?.title = "Edit"
-            //
-            UIView.animate(withDuration: 100, animations: {
-                self.view.layoutIfNeeded()
-            })
+            mapView.frame = mapView.frame.offsetBy(dx: 0, dy: yOffset)
+            editLabel.frame = editLabel.frame.offsetBy(dx: 0, dy: yOffset)
         }
     }
     
-    //Mark: Pin Editing
-    override func setEditing(_ editing: Bool, animated: Bool) {
-        <#code#>
+    func editLabelFrameForSize(_ size: CGSize) -> CGRect {
+        let editingShift: CGFloat = 70 * (isEditing ? -1 : 0)
+        let labelRect = CGRect(x: 0, y: size.height + editingShift, width: size.width, height: 70)
+        return labelRect
+    }
+    
+    func mapFrameForSize(_ size: CGSize) -> CGRect {
+        let editingShift: CGFloat = 70 * (isEditing ? -1 : 0)
+        let labelRect = CGRect(x: 0, y: editingShift, width: size.width, height: size.height)
+        return labelRect
+    }
+    
+    func loadAnnotations() {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
+        if let pins = try? coreDataStack.context.fetch(fetchRequest) as! [Pin] {
+            var pinAnnotations = [MKPointAnnotation]()
+            for pin in pins {
+                let newAnnotation = MKPointAnnotation()
+                newAnnotation.coordinate.latitude = CLLocationDegrees(pin.lat)
+                newAnnotation.coordinate.longitude = CLLocationDegrees(pin.long)
+                pinAnnotations.append(newAnnotation)
+            }
+            print("# of pins == \(pinAnnotations.count)")
+            //add annotations to the map
+            mapView.addAnnotations(pinAnnotations)
+        }
     }
 }
 
@@ -102,12 +133,19 @@ extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         print("did select")
         mapView.deselectAnnotation(view.annotation, animated: true)
+        //if let pin = getSelecte
+        var pin: Pin!
+        do {
+            let pinAnnotation = view.annotation as! MKPointAnnotation
+            
+        }
+        //        guard !self.isEditing else {
+        //            mapView.removeAnnotation(view.annotation!)
+        //
+        //        }
         
         let photoAlbumViewController = storyboard!.instantiateViewController(withIdentifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
-        
         self.navigationController!.pushViewController(photoAlbumViewController, animated: true)
-        
     }
-    
 }
 
