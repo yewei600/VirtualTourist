@@ -9,8 +9,16 @@
 import UIKit
 
 class PhotoCollectionViewCell: UICollectionViewCell {
-
+    
     @IBOutlet weak var photoImageView: UIImageView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
-    
+    func setCellImage(_ image: UIImage?){
+        DispatchQueue.main.async {
+            self.photoImageView.image = image
+            if self.photoImageView.image != nil {
+                self.activityIndicator.stopAnimating()
+            }
+        }
+    }
 }

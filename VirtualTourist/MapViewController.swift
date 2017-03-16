@@ -14,6 +14,7 @@ class MapViewController: UIViewController {
     
     // MARK: properties
     @IBOutlet weak var mapView: MKMapView!
+    var pins = [Pin]()
     var editLabel: UILabel!
     var bottomConstraint: NSObject!
     var coreDataStack: CoreDataStack!
@@ -50,12 +51,14 @@ class MapViewController: UIViewController {
             let touchPoint = gestureRecognizer.location(in: self.mapView)
             let newCoord: CLLocationCoordinate2D = mapView.convert(touchPoint, toCoordinateFrom: self.mapView)
             
-            //add pin to core data
             let newPin = Pin(coordinate: newCoord, context: coreDataStack.context)
+            pins.append(newPin)
             //add pin annotation to map
             let newAnnotation = MKPointAnnotation()
             newAnnotation.coordinate = newCoord
             mapView.addAnnotation(newAnnotation)
+            //get the photos at this location
+            getPhotosFromFlickr(newPin)
         }
         coreDataStack.save()
     }
@@ -91,7 +94,8 @@ class MapViewController: UIViewController {
     
     func loadAnnotations() {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
-        if let pins = try? coreDataStack.context.fetch(fetchRequest) as! [Pin] {
+        if let fetchResults = try? coreDataStack.context.fetch(fetchRequest) as! [Pin] {
+            pins = fetchResults
             var pinAnnotations = [MKPointAnnotation]()
             for pin in pins {
                 let newAnnotation = MKPointAnnotation()
@@ -102,6 +106,40 @@ class MapViewController: UIViewController {
             print("# of pins == \(pinAnnotations.count)")
             //add annotations to the map
             mapView.addAnnotations(pinAnnotations)
+        }
+    }
+    
+    func getSelectedPin(_ annotation: MKAnnotation) -> Pin? {
+        for pin in pins {
+            let coord = annotation.coordinate
+            if coord.latitude == pin.lat && coord.longitude == pin.long {
+                return pin
+            }
+        }
+        return nil
+    }
+    
+    //GOTTA COMPLETE THE ERROR HANDLING....
+    //get photos from Flickr
+    func getPhotosFromFlickr(_ pin: Pin) {
+        FlickrClient.sharedInstance().getLocationPhotoPages(pin) { (pageNumber, success, error) in
+            if success {
+                FlickrClient.sharedInstance().getPagePhotos(pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, photosData, success, error) in
+                    if success {
+                        for url in photosURL! {
+                            for data in photosData {
+                                let newPhoto = Photo(url: url, data: data, context: self.coreDataStack.context)
+                            }
+                        }
+                    } else {
+                        print("error downloading photos from Flickr!")
+                    }
+                })
+                self.coreDataStack.save()
+                print("photos saved in Core Data!!!!")
+            } else {
+                print("error getting random photo page from Flickr!")
+            }
         }
     }
 }
@@ -133,19 +171,24 @@ extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         print("did select")
         mapView.deselectAnnotation(view.annotation, animated: true)
-        //if let pin = getSelecte
-        var pin: Pin!
-        do {
-            let pinAnnotation = view.annotation as! MKPointAnnotation
-            
-        }
-        //        guard !self.isEditing else {
-        //            mapView.removeAnnotation(view.annotation!)
-        //
-        //        }
         
-        let photoAlbumViewController = storyboard!.instantiateViewController(withIdentifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
-        self.navigationController!.pushViewController(photoAlbumViewController, animated: true)
+        if let pin = getSelectedPin(view.annotation!) {
+            //not in edit mode
+            if !isEditing{
+                let controller = storyboard!.instantiateViewController(withIdentifier: "PhotosCollectionViewController") as! PhotosCollectionViewController
+                controller.pin = pin
+                controller.coordinates = CLLocationCoordinate2D(latitude: pin.lat, longitude: pin.long)
+                navigationController?.pushViewController(controller, animated: true)
+            }
+                //in edit mode
+            else {
+                let index = pins.index(of: pin)
+                pins.remove(at: index!)
+                mapView.removeAnnotation(view.annotation!)
+                coreDataStack.context.delete(pin)
+                coreDataStack.save()
+            }
+        }
     }
 }
 

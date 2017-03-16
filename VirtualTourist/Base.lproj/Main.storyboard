@@ -58,10 +58,10 @@
             </objects>
             <point key="canvasLocation" x="-674" y="123"/>
         </scene>
-        <!--Photo Album View Controller-->
+        <!--Photos Collection View Controller-->
         <scene sceneID="lXq-Mk-Bzt">
             <objects>
-                <viewController storyboardIdentifier="PhotoAlbumViewController" id="wNH-Wn-m53" customClass="PhotoAlbumViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="PhotosCollectionViewController" id="wNH-Wn-m53" userLabel="Photos Collection View Controller" customClass="PhotosCollectionViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="rkD-GE-nIz"/>
                         <viewControllerLayoutGuide type="bottom" id="tPU-dF-Kr7"/>
@@ -88,7 +88,7 @@
                                     <nil key="highlightedColor"/>
                                 </label>
                                 <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="zp2-Pd-u1N">
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="picCell" id="zp2-Pd-u1N" customClass="PhotoCollectionViewCell" customModule="VirtualTourist" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
@@ -105,6 +105,10 @@
                                                 </activityIndicatorView>
                                             </subviews>
                                         </view>
+                                        <connections>
+                                            <outlet property="activityIndicator" destination="JyJ-O1-whw" id="o5P-2g-Cb5"/>
+                                            <outlet property="photoImageView" destination="dLR-Kv-yXZ" id="zwi-8B-MtU"/>
+                                        </connections>
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
@@ -115,7 +119,7 @@
                                 </constraints>
                             </mapView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QLE-D9-iWo">
-                                <rect key="frame" x="124" y="617" width="127" height="30"/>
+                                <rect key="frame" x="-4" y="637" width="379" height="30"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="New Collection"/>
                                 <connections>
