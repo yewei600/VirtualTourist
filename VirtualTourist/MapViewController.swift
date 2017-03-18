@@ -46,6 +46,7 @@ class MapViewController: UIViewController {
     
     // MARK: Helper Functions
     func longPressAddPin(gestureRecognizer: UIGestureRecognizer) {
+        print("longPressAddPin called")
         if gestureRecognizer.state == .began {
             print("long press detected 0")
             let touchPoint = gestureRecognizer.location(in: self.mapView)
@@ -122,20 +123,28 @@ class MapViewController: UIViewController {
     //GOTTA COMPLETE THE ERROR HANDLING....
     //get photos from Flickr
     func getPhotosFromFlickr(_ pin: Pin) {
+        print("getPhotosFromFlickr Called")
         FlickrClient.sharedInstance().getLocationPhotoPages(pin) { (pageNumber, success, error) in
             if success {
                 FlickrClient.sharedInstance().getPagePhotos(pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, photosData, success, error) in
                     if success {
+                        var cnt: Int = 0
                         for url in photosURL! {
                             for data in photosData {
-                                let newPhoto = Photo(url: url, data: data, context: self.coreDataStack.context)
+                                let photo = Photo(url: url, data: data, context: self.coreDataStack.context)
+                                photo.pin = pin
+                                print("create photo #\(cnt)")
+                                cnt+=1
                             }
+                        }
+                        DispatchQueue.main.async {
+                            //should be called on the main thread.
+                            self.coreDataStack.save()
                         }
                     } else {
                         print("error downloading photos from Flickr!")
                     }
                 })
-                self.coreDataStack.save()
                 print("photos saved in Core Data!!!!")
             } else {
                 print("error getting random photo page from Flickr!")

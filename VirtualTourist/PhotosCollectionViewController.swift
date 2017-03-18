@@ -11,12 +11,13 @@ import UIKit
 import MapKit
 import CoreData
 
-class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
+class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, MKMapViewDelegate{
     
     @IBOutlet weak var noPhotosLabel: UILabel!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var newCollectionButton: UIButton!
+    @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     
     //MARK: properties
     var coreDataStack: CoreDataStack!
@@ -40,6 +41,7 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         
         setUpMap()
         getPinPhotos()
+        setUpViewCells()
     }
     
     // MARK: collection view methods
@@ -50,12 +52,11 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "picCell", for: indexPath) as! PhotoCollectionViewCell
         let photo = photos[indexPath.item]
-        //tempImage
+        //temp Image
         cell.setCellImage(nil)
         
         if let imageData = photo.imageData {
             cell.setCellImage(UIImage(data: imageData as Data))
-            print("set image to cell")
         } else {
             //get the photo from Flickr
             DispatchQueue.global().async {
@@ -88,7 +89,47 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
     
     // MARK: helper methods
     @IBAction func getNewCollection(_ sender: Any) {
+        //delete all current photos for the pin
+        for photo in photos {
+            coreDataStack.context.delete(photo)
+            coreDataStack.save()
+        }
+        newCollectionButton.isEnabled = false
+        noPhotosLabel.isHidden = true
+        photos.removeAll()
         
+        getFlickrPhotos { (success) in
+            if success{
+                self.collectionView.reloadData()
+                print("finished reloading new photos")
+            }
+        }
+    }
+    
+    func getFlickrPhotos(completionHandler: @escaping (_ success: Bool) -> Void) {
+        FlickrClient.sharedInstance().getLocationPhotoPages(pin) { (pageNumber, success, error) in
+            if success {
+                FlickrClient.sharedInstance().getPagePhotos(self.pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, photosData, success, error) in
+                    if success {
+                        for url in photosURL! {
+                            for data in photosData {
+                                let photo = Photo(url: url, data: data, context: self.coreDataStack.context)
+                                photo.pin = self.pin
+                            }
+                        }
+                        DispatchQueue.main.async {
+                            //should be called on the main thread.
+                            self.coreDataStack.save()
+                            completionHandler(true)
+                        }
+                    } else {
+                        print("error downloading photos from Flickr!")
+                    }
+                })
+            } else {
+                print("error getting random photo page from Flickr!")
+            }
+        }
     }
     
     func getPinPhotos() {
@@ -98,6 +139,10 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         if let fetchResults = try? coreDataStack.context.fetch(fetchRequest) as! [Photo] {
             photos = fetchResults
             print("got \(photos.count) photos from core data!!!")
+            if photos.count == 0 {
+                noPhotosLabel.isHidden = false
+                newCollectionButton.isEnabled = false
+            }
         } else {
             print("error getting photos from core data")
         }
@@ -112,14 +157,11 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         mapView.addAnnotation(annotation)
     }
     
-    
-}
-
-extension PhotosCollectionViewController: MKMapViewDelegate {
-    // MARK: map view
-    //    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-    //
-    //
-    //    }
-    
+    func setUpViewCells() {
+        let space: CGFloat = 3.0
+        let dimension = (self.view.frame.size.width - (2*space)) / 3.0
+        flowLayout.minimumInteritemSpacing = space
+        flowLayout.minimumLineSpacing = 0.1
+        flowLayout.itemSize = CGSize(width: dimension, height: dimension)
+    }
 }

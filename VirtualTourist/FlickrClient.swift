@@ -155,7 +155,7 @@ class FlickrClient {
             let perPage = min(Int(total)!, 100)
             let numberOfPhotos = min(Int(total)!, 12)
             if numberOfPhotos > 0 {
-                for _ in 0...numberOfPhotos-1 {
+                for cnt in 0...numberOfPhotos-1 {
                     var random = Int(arc4random_uniform(UInt32(perPage)))
                     while chosen.contains(random) {
                         random = Int(arc4random_uniform(UInt32(perPage)))
@@ -166,11 +166,13 @@ class FlickrClient {
                     if let photoUrl = photo[FlickrResponseKeys.MediumURL] as? String {
                         if let imageData = try? Data(contentsOf: URL(string: photoUrl)!) {
                             photosData.append(imageData)
+                            print("called \(cnt) times")
                         }
                         photosURL.append(photoUrl)
                     }
                 }
             }
+            print("photosData array length==\(photosData.count)")
             completionHandler(photosURL,photosData,true,nil)
         }
         //start the task!

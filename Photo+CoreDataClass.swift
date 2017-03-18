@@ -17,6 +17,7 @@ public class Photo: NSManagedObject {
             self.init(entity: ent, insertInto: context)
             self.imagePath = url
             self.imageData = data as NSData?
+            //print("saved \(self.imagePath)")
         } else{
             fatalError("Unable to find Photo Entity name!")
         }

@@ -70,9 +70,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="EdH-iX-DvD">
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="EdH-iX-DvD">
                                 <rect key="frame" x="0.0" y="162" width="375" height="447"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="WrL-rO-PIl">
                                     <size key="itemSize" width="100" height="100"/>
@@ -80,7 +79,7 @@
                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
                                     <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 </collectionViewFlowLayout>
-                                <label key="backgroundView" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No Photos for this Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="DwA-II-cG2">
+                                <label key="backgroundView" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No Photos for this Location" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="DwA-II-cG2">
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="447"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
@@ -99,7 +98,7 @@
                                                     <rect key="frame" x="-70" y="-14" width="240" height="128"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 </imageView>
-                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="JyJ-O1-whw">
+                                                <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" hidesWhenStopped="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="JyJ-O1-whw">
                                                     <rect key="frame" x="40" y="40" width="20" height="20"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 </activityIndicatorView>
@@ -112,15 +111,14 @@
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="VWX-pc-tXs">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="VWX-pc-tXs">
                                 <rect key="frame" x="0.0" y="20" width="375" height="134"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="180" id="dXa-ke-gaf"/>
                                 </constraints>
                             </mapView>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QLE-D9-iWo">
+                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QLE-D9-iWo">
                                 <rect key="frame" x="-4" y="637" width="379" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="New Collection"/>
                                 <connections>
                                     <action selector="getNewCollection:" destination="wNH-Wn-m53" eventType="touchUpInside" id="npP-ii-1kG"/>
@@ -129,12 +127,22 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="VWX-pc-tXs" firstAttribute="leading" secondItem="Ee3-fT-n65" secondAttribute="leading" id="6ve-Iy-Zu2"/>
-                            <constraint firstAttribute="trailing" secondItem="VWX-pc-tXs" secondAttribute="trailing" id="tOC-La-yRL"/>
+                            <constraint firstItem="VWX-pc-tXs" firstAttribute="top" secondItem="rkD-GE-nIz" secondAttribute="bottom" id="28d-7q-LYg"/>
+                            <constraint firstItem="EdH-iX-DvD" firstAttribute="leading" secondItem="Ee3-fT-n65" secondAttribute="leading" id="7J8-1v-Fkp"/>
+                            <constraint firstItem="QLE-D9-iWo" firstAttribute="leading" secondItem="Ee3-fT-n65" secondAttribute="leading" id="8CL-zy-CPX"/>
+                            <constraint firstItem="EdH-iX-DvD" firstAttribute="top" secondItem="VWX-pc-tXs" secondAttribute="bottom" constant="8" id="GSt-sN-c6y"/>
+                            <constraint firstItem="QLE-D9-iWo" firstAttribute="top" secondItem="EdH-iX-DvD" secondAttribute="bottom" constant="28" id="Oo5-AH-tf2"/>
+                            <constraint firstItem="VWX-pc-tXs" firstAttribute="leading" secondItem="Ee3-fT-n65" secondAttribute="leading" id="TdV-qJ-fTF"/>
+                            <constraint firstItem="tPU-dF-Kr7" firstAttribute="top" secondItem="QLE-D9-iWo" secondAttribute="bottom" id="dDC-gu-PHX"/>
+                            <constraint firstAttribute="trailing" secondItem="VWX-pc-tXs" secondAttribute="trailing" id="heo-HB-vD9"/>
+                            <constraint firstItem="QLE-D9-iWo" firstAttribute="top" secondItem="EdH-iX-DvD" secondAttribute="bottom" constant="28" id="j0g-TP-T10"/>
+                            <constraint firstAttribute="trailing" secondItem="EdH-iX-DvD" secondAttribute="trailing" id="tVL-bC-Yp3"/>
+                            <constraint firstAttribute="trailing" secondItem="QLE-D9-iWo" secondAttribute="trailing" id="yAS-aD-KFD"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="collectionView" destination="EdH-iX-DvD" id="YyT-i9-xEP"/>
+                        <outlet property="flowLayout" destination="WrL-rO-PIl" id="Rc5-M3-9RJ"/>
                         <outlet property="mapView" destination="VWX-pc-tXs" id="IRJ-3R-Byu"/>
                         <outlet property="newCollectionButton" destination="QLE-D9-iWo" id="Xac-qg-hJq"/>
                         <outlet property="noPhotosLabel" destination="DwA-II-cG2" id="cfe-1d-UtR"/>
