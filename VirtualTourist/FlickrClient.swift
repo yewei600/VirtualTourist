@@ -87,7 +87,7 @@ class FlickrClient {
         task.resume()
     }
     
-    func getPagePhotos(_ pin: Pin, withPageNumber: Int, completionHandler: @escaping (_ photosURL:[String]?, _ photosData:[Data], _ success: Bool, _ error: String?) -> Void) {
+    func getPagePhotos(_ pin: Pin, withPageNumber: Int, completionHandler: @escaping (_ photosURL:[String]?, _ success: Bool, _ error: String?) -> Void) {
         
         // TODO: Make request to Flickr!
         let session = URLSession.shared
@@ -151,11 +151,11 @@ class FlickrClient {
             //get 12 random photos
             var chosen = [Int]()
             var photosURL = [String]()
-            var photosData = [Data]()
+            //var photosData = [Data]()
             let perPage = min(Int(total)!, 100)
             let numberOfPhotos = min(Int(total)!, 12)
             if numberOfPhotos > 0 {
-                for cnt in 0...numberOfPhotos-1 {
+                for i in 0...numberOfPhotos-1 {
                     var random = Int(arc4random_uniform(UInt32(perPage)))
                     while chosen.contains(random) {
                         random = Int(arc4random_uniform(UInt32(perPage)))
@@ -164,16 +164,15 @@ class FlickrClient {
                     let photo = photosArray[random] as [String:AnyObject]
                     //saving the photo data and URL into arrays
                     if let photoUrl = photo[FlickrResponseKeys.MediumURL] as? String {
-                        if let imageData = try? Data(contentsOf: URL(string: photoUrl)!) {
-                            photosData.append(imageData)
-                            print("called \(cnt) times")
-                        }
+//                        if let imageData = try? Data(contentsOf: URL(string: photoUrl)!) {
+//                            photosData.append(imageData)
+//                            print("called \(cnt) times")
+//                        }
                         photosURL.append(photoUrl)
                     }
                 }
             }
-            print("photosData array length==\(photosData.count)")
-            completionHandler(photosURL,photosData,true,nil)
+            completionHandler(photosURL,true,nil)
         }
         //start the task!
         task.resume()

@@ -59,7 +59,7 @@ class MapViewController: UIViewController {
             newAnnotation.coordinate = newCoord
             mapView.addAnnotation(newAnnotation)
             //get the photos at this location
-            getPhotosFromFlickr(newPin)
+            //getPhotosFromFlickr(newPin)
         }
         coreDataStack.save()
     }
@@ -119,38 +119,6 @@ class MapViewController: UIViewController {
         }
         return nil
     }
-    
-    //GOTTA COMPLETE THE ERROR HANDLING....
-    //get photos from Flickr
-    func getPhotosFromFlickr(_ pin: Pin) {
-        print("getPhotosFromFlickr Called")
-        FlickrClient.sharedInstance().getLocationPhotoPages(pin) { (pageNumber, success, error) in
-            if success {
-                FlickrClient.sharedInstance().getPagePhotos(pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, photosData, success, error) in
-                    if success {
-                        var cnt: Int = 0
-                        for url in photosURL! {
-                            for data in photosData {
-                                let photo = Photo(url: url, data: data, context: self.coreDataStack.context)
-                                photo.pin = pin
-                                print("create photo #\(cnt)")
-                                cnt+=1
-                            }
-                        }
-                        DispatchQueue.main.async {
-                            //should be called on the main thread.
-                            self.coreDataStack.save()
-                        }
-                    } else {
-                        print("error downloading photos from Flickr!")
-                    }
-                })
-                print("photos saved in Core Data!!!!")
-            } else {
-                print("error getting random photo page from Flickr!")
-            }
-        }
-    }
 }
 
 //MARK: MapView
@@ -158,7 +126,6 @@ extension MapViewController: MKMapViewDelegate {
     
     //Returns the view associated with the specified annotation object.
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        print("view For called")
         let reuseId = "pin"
         
         var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView

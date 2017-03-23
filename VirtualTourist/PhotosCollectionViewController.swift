@@ -25,8 +25,15 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
     var coordinates: CLLocationCoordinate2D!
     var lat: Double!
     var long: Double!
-    var photos: [Photo]!
-    var downloadCount = 0
+    var photos = [Photo]()
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        //can have a completion handler here....
+        getPinPhotos()
+        
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,36 +47,34 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         coreDataStack = delegate.stack
         
         setUpMap()
-        getPinPhotos()
         setUpViewCells()
     }
     
     // MARK: collection view methods
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        print("number of photos = \(photos.count)")
         return photos.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "picCell", for: indexPath) as! PhotoCollectionViewCell
         let photo = photos[indexPath.item]
-        //temp Image
-        cell.setCellImage(nil)
         
-        if let imageData = photo.imageData {
-            cell.setCellImage(UIImage(data: imageData as Data))
+        if let photoData = photo.imageData {
+            cell.photoImageView.image = UIImage(data: photoData as Data)
         } else {
-            //get the photo from Flickr
-            DispatchQueue.global().async {
-                FlickrClient.sharedInstance().getSinglePhoto(photo.imagePath!, completionHandler: { (data, success) in
-                    if success {
-                        DispatchQueue.main.async {
-                            cell.setCellImage(UIImage(data: data!))
-                            photo.imageData = data as NSData?
-                            self.coreDataStack.save()
-                        }
-                    }
-                })
-            }
+            cell.photoImageView.image = UIImage(named: "Placeholder")
+            cell.activityIndicator.startAnimating()
+            cell.activityIndicator.isHidden = false
+            
+            FlickrClient.sharedInstance().getSinglePhoto(photo.imagePath!, completionHandler: { (data, success) in
+                if success {
+                    cell.photoImageView.image = UIImage(data: data!)
+                    cell.activityIndicator.stopAnimating()
+                    photo.imageData = data as NSData?
+                    self.coreDataStack.save()
+                }
+            })
         }
         return cell
     }
@@ -98,36 +103,37 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         noPhotosLabel.isHidden = true
         photos.removeAll()
         
-        getFlickrPhotos { (success) in
-            if success{
+        getPhotoURLsFromFlickr { (success) in
+            if success {
                 self.collectionView.reloadData()
-                print("finished reloading new photos")
             }
         }
     }
     
-    func getFlickrPhotos(completionHandler: @escaping (_ success: Bool) -> Void) {
+    //get photos from Flickr
+    func getPhotoURLsFromFlickr(completionHandler: @escaping (_ success: Bool) -> Void) {
+        print("getPhotosFromFlickr Called")
         FlickrClient.sharedInstance().getLocationPhotoPages(pin) { (pageNumber, success, error) in
             if success {
-                FlickrClient.sharedInstance().getPagePhotos(self.pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, photosData, success, error) in
+                FlickrClient.sharedInstance().getPagePhotos(self.pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, success, error) in
                     if success {
                         for url in photosURL! {
-                            for data in photosData {
-                                let photo = Photo(url: url, data: data, context: self.coreDataStack.context)
-                                photo.pin = self.pin
-                            }
+                            let photo = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: self.coreDataStack.context) as! Photo
+                            photo.imagePath = url
+                            photo.pin = self.pin
+                            self.photos.append(photo)
                         }
-                        DispatchQueue.main.async {
-                            //should be called on the main thread.
-                            self.coreDataStack.save()
-                            completionHandler(true)
-                        }
+                        print("photos array now have \(self.photos.count)")
+                        self.coreDataStack.save()
+                        completionHandler(true)
                     } else {
                         print("error downloading photos from Flickr!")
                     }
                 })
+                print("photos saved in Core Data!!!!")
             } else {
                 print("error getting random photo page from Flickr!")
+                completionHandler(false)
             }
         }
     }
@@ -135,17 +141,29 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
     func getPinPhotos() {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName:"Photo")
         fetchRequest.sortDescriptors = []
-        fetchRequest.predicate = NSPredicate(format: "pin == %@", pin)
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
         if let fetchResults = try? coreDataStack.context.fetch(fetchRequest) as! [Photo] {
             photos = fetchResults
             print("got \(photos.count) photos from core data!!!")
             if photos.count == 0 {
-                noPhotosLabel.isHidden = false
-                newCollectionButton.isEnabled = false
+                print("no photo objects for pin found... downloading photo URLs")
+                getPhotoURLsFromFlickr(completionHandler: { (success) in
+                    if success {
+                        //PUT IN THE DISPATCHQUEUE main here?
+                        DispatchQueue.main.async {
+                            self.collectionView.reloadData()
+                        }
+                        
+                        print("downloaded \(self.photos.count) photos")
+                    } else {
+                        print("didn't find any photos!")
+                    }
+                })
             }
         } else {
-            print("error getting photos from core data")
+            print("error getting photos from core data, downloading photo URLs")
         }
+        
     }
     
     func setUpMap() {
