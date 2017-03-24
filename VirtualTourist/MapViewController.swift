@@ -15,6 +15,7 @@ class MapViewController: UIViewController {
     // MARK: properties
     @IBOutlet weak var mapView: MKMapView!
     var pins = [Pin]()
+    
     var editLabel: UILabel!
     var bottomConstraint: NSObject!
     var coreDataStack: CoreDataStack!
@@ -47,7 +48,7 @@ class MapViewController: UIViewController {
     // MARK: Helper Functions
     func longPressAddPin(gestureRecognizer: UIGestureRecognizer) {
         print("longPressAddPin called")
-        if gestureRecognizer.state == .began {
+        if gestureRecognizer.state == .ended {
             print("long press detected 0")
             let touchPoint = gestureRecognizer.location(in: self.mapView)
             let newCoord: CLLocationCoordinate2D = mapView.convert(touchPoint, toCoordinateFrom: self.mapView)
@@ -58,8 +59,12 @@ class MapViewController: UIViewController {
             let newAnnotation = MKPointAnnotation()
             newAnnotation.coordinate = newCoord
             mapView.addAnnotation(newAnnotation)
-            //get the photos at this location
-            //getPhotosFromFlickr(newPin)
+            print("number of pins = \(self.pins.count)")
+            
+            //call the function to get photoURL metadata  create the partial photo objects arrray.
+            getPhotoURLsFromFlickr(newPin, completionHandler: { (success) in
+                
+            })
         }
         coreDataStack.save()
     }
@@ -118,6 +123,38 @@ class MapViewController: UIViewController {
             }
         }
         return nil
+    }
+    
+    //get photos from Flickr
+    func getPhotoURLsFromFlickr(_ pin: Pin, completionHandler: @escaping (_ success: Bool) -> Void) {
+        print("getPhotosFromFlickr Called")
+        FlickrClient.sharedInstance().getLocationPhotoPages(pin) { (pageNumber, success, error) in
+            if success {
+                FlickrClient.sharedInstance().getPagePhotos(pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, success, error) in
+                    if success {
+                        
+                        DispatchQueue.main.async {
+                            var photos = [Photo]()
+                            for url in photosURL! {
+                                let photo = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: self.coreDataStack.context) as! Photo
+                                photo.imagePath = url
+                                photo.pin = pin
+                                photos.append(photo)
+                            }
+                            print("MapViewController photos array== \(photos.count)")
+                            self.coreDataStack.save()
+                            completionHandler(true)
+                        }
+                    } else {
+                        print("error downloading photos from Flickr!")
+                    }
+                })
+                print("photos saved in Core Data!!!!")
+            } else {
+                print("error getting random photo page from Flickr!")
+                completionHandler(false)
+            }
+        }
     }
 }
 

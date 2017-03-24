@@ -95,6 +95,8 @@ class FlickrClient {
         
         let request = URLRequest(url: flickrURLFromParameters(methodParameters))
         
+        print(flickrURLFromParameters(methodParameters))
+        
         let task = session.dataTask(with: flickrURLFromParameters(methodParameters)){ (data,response,error) in
             
             func sendError(error: String){
@@ -180,6 +182,8 @@ class FlickrClient {
     
     func getSinglePhoto(_ photoURL: String, completionHandler:(_ imageData: Data?, _ success: Bool) -> Void) {
         let url = URL(string: photoURL)
+        // data task -> request -> Image URL
+        
         if let imageData = try? Data(contentsOf: url!){
             completionHandler(imageData, true)
         } else {

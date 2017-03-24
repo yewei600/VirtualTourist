@@ -20,6 +20,7 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     
     //MARK: properties
+    //var nsfetchController: NSFetchedResultsController
     var coreDataStack: CoreDataStack!
     var pin: Pin!
     var coordinates: CLLocationCoordinate2D!
@@ -32,15 +33,18 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         
         getPinPhotos { (thereArePhotos) in
             if !thereArePhotos {
-                self.noPhotosLabel.isHidden = false
-                self.newCollectionButton.isEnabled = false
+                DispatchQueue.main.async {
+                    self.noPhotosLabel.isHidden = false
+                    self.newCollectionButton.isEnabled = false
+                }
             }
         }
-        
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        navigationItem.backBarButtonItem?.title = "Back"
         mapView.delegate = self
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -73,10 +77,13 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
             
             FlickrClient.sharedInstance().getSinglePhoto(photo.imagePath!, completionHandler: { (data, success) in
                 if success {
-                    cell.photoImageView.image = UIImage(data: data!)
-                    cell.activityIndicator.stopAnimating()
-                    photo.imageData = data as NSData?
-                    self.coreDataStack.save()
+                    // mainqueue
+                    DispatchQueue.main.async {
+                        cell.photoImageView.image = UIImage(data: data!)
+                        cell.activityIndicator.stopAnimating()
+                        photo.imageData = data as NSData?
+                        self.coreDataStack.save()
+                    }
                 }
             })
         }
@@ -122,15 +129,17 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
             if success {
                 FlickrClient.sharedInstance().getPagePhotos(self.pin, withPageNumber: pageNumber!, completionHandler: { (photosURL, success, error) in
                     if success {
-                        for url in photosURL! {
-                            let photo = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: self.coreDataStack.context) as! Photo
-                            photo.imagePath = url
-                            photo.pin = self.pin
-                            self.photos.append(photo)
+                        DispatchQueue.main.async {
+                            for url in photosURL! {
+                                let photo = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: self.coreDataStack.context) as! Photo
+                                photo.imagePath = url
+                                photo.pin = self.pin
+                                self.photos.append(photo)
+                            }
+                            print("photos array now have \(self.photos.count)")
+                            self.coreDataStack.save()
+                            completionHandler(true)
                         }
-                        print("photos array now have \(self.photos.count)")
-                        self.coreDataStack.save()
-                        completionHandler(true)
                     } else {
                         print("error downloading photos from Flickr!")
                     }
@@ -159,7 +168,9 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
                         if self.photos.count == 0 {
                             completionHandler(false)
                         } else {
-                            self.collectionView.reloadData()
+                            DispatchQueue.main.async {
+                                self.collectionView.reloadData()
+                            }
                         }
                         print("downloaded \(self.photos.count) photos")
                     }
