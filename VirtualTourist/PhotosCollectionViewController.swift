@@ -30,8 +30,12 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        //can have a completion handler here....
-        getPinPhotos()
+        getPinPhotos { (thereArePhotos) in
+            if !thereArePhotos {
+                self.noPhotosLabel.isHidden = false
+                self.newCollectionButton.isEnabled = false
+            }
+        }
         
     }
     
@@ -106,6 +110,7 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         getPhotoURLsFromFlickr { (success) in
             if success {
                 self.collectionView.reloadData()
+                self.newCollectionButton.isEnabled = true
             }
         }
     }
@@ -138,25 +143,25 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         }
     }
     
-    func getPinPhotos() {
+    func getPinPhotos(completionHandler: @escaping (_ thereArePhotos: Bool) -> Void) {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName:"Photo")
         fetchRequest.sortDescriptors = []
         fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
+        
         if let fetchResults = try? coreDataStack.context.fetch(fetchRequest) as! [Photo] {
             photos = fetchResults
             print("got \(photos.count) photos from core data!!!")
+            
             if photos.count == 0 {
                 print("no photo objects for pin found... downloading photo URLs")
                 getPhotoURLsFromFlickr(completionHandler: { (success) in
                     if success {
-                        //PUT IN THE DISPATCHQUEUE main here?
-                        DispatchQueue.main.async {
+                        if self.photos.count == 0 {
+                            completionHandler(false)
+                        } else {
                             self.collectionView.reloadData()
                         }
-                        
                         print("downloaded \(self.photos.count) photos")
-                    } else {
-                        print("didn't find any photos!")
                     }
                 })
             }
