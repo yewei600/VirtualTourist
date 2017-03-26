@@ -37,6 +37,7 @@ extension FlickrClient {
         static let SafeSearch = "safe_search"
         static let Text = "text"
         static let Page = "page"
+        static let Per_Page = "per_page"
     }
     
     // MARK: Flickr Parameter Values
@@ -49,6 +50,7 @@ extension FlickrClient {
         static let GalleryID = "5704-72157622566655097"
         static let MediumURL = "url_m"
         static let UseSafeSearch = "1"
+        static let PerPageValue = "20"
     }
     
     // MARK: Flickr Response Keys

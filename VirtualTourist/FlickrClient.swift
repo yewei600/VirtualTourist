@@ -166,10 +166,6 @@ class FlickrClient {
                     let photo = photosArray[random] as [String:AnyObject]
                     //saving the photo data and URL into arrays
                     if let photoUrl = photo[FlickrResponseKeys.MediumURL] as? String {
-//                        if let imageData = try? Data(contentsOf: URL(string: photoUrl)!) {
-//                            photosData.append(imageData)
-//                            print("called \(cnt) times")
-//                        }
                         photosURL.append(photoUrl)
                     }
                 }
@@ -180,15 +176,19 @@ class FlickrClient {
         task.resume()
     }
     
-    func getSinglePhoto(_ photoURL: String, completionHandler:(_ imageData: Data?, _ success: Bool) -> Void) {
-        let url = URL(string: photoURL)
-        // data task -> request -> Image URL
+    func getSinglePhoto(_ photoURL: String, completionHandler: @escaping (_ imageData: Data?, _ success: Bool) -> Void) {
+        let session = URLSession.shared
+        let imageURL = URL(string: photoURL)
+        let request: URLRequest = URLRequest(url: imageURL! as URL)
         
-        if let imageData = try? Data(contentsOf: url!){
-            completionHandler(imageData, true)
-        } else {
-            completionHandler(nil, false)
+        let task = session.dataTask(with: request as URLRequest) { (data, response, error) in
+            if error != nil {
+                completionHandler(nil, false)
+            } else {
+                completionHandler(data, true)
+            }
         }
+        task.resume()
     }
     
     // MARK: Helper for Creating a URL from Parameters

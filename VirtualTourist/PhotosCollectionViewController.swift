@@ -179,7 +179,6 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDelegate
         } else {
             print("error getting photos from core data, downloading photo URLs")
         }
-        
     }
     
     func setUpMap() {
